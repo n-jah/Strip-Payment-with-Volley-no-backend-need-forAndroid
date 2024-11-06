@@ -3,7 +3,6 @@ package com.example.paymentwithstripandvolley
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -16,32 +15,33 @@ import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import org.json.JSONObject
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var paymentSheet: PaymentSheet
-    private lateinit var paymentIntentClientSecret: String
     private lateinit var binding: ActivityMainBinding
     private lateinit var customerId: String
     private lateinit var ephemeralKey: String
     private lateinit var clientSecret: String
     private var mount: String = "0"
 
-    // #TODO put your public and secret key
-    private val SECRET_KEY =  "put you secert key"
-    private val PUBLISHABLE_KEY ="put you public key"
+    // #TODO Replace with your public and secret key
+    private val SECRET_KEY = "secret key here"
+    private val PUBLISHABLE_KEY = "publishable key here"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            enableEdgeToEdge()
+        }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-
-
 
         Log.d("MainActivity", mount)
 
@@ -51,13 +51,15 @@ class MainActivity : AppCompatActivity() {
         paymentSheet = PaymentSheet(this, ::onPaymentSheetResult)
 
         binding.fab.setOnClickListener {
-            mount = (( (binding.mount.text.toString().toInt() * 100))).toString()
-            postApi() // Start API call when the button is clicked
+            try {
+                mount = ((binding.mount.text.toString().toInt() * 100)).toString()
+                postApi()
+            } catch (e: NumberFormatException) {
+                Toast.makeText(this, "Please enter a valid amount", Toast.LENGTH_SHORT).show()
+            }
         }
-
-
-
     }
+
     private fun onPaymentSheetResult(result: PaymentSheetResult) {
         val resultText = when (result) {
             is PaymentSheetResult.Completed -> "Payment complete!"
@@ -66,7 +68,6 @@ class MainActivity : AppCompatActivity() {
         }
         Toast.makeText(this, resultText, Toast.LENGTH_SHORT).show()
     }
-
 
     private fun postApi() {
         val url = "https://api.stripe.com/v1/customers"
@@ -82,6 +83,7 @@ class MainActivity : AppCompatActivity() {
             },
             { error ->
                 Toast.makeText(this, "Failed to create customer", Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error: ${error.message}")
             }
         ) {
             override fun getHeaders(): Map<String, String> {
@@ -106,6 +108,7 @@ class MainActivity : AppCompatActivity() {
             },
             { error ->
                 Toast.makeText(this, "Failed to create ephemeral key", Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error: ${error.message}")
             }
         ) {
             override fun getHeaders(): Map<String, String> {
@@ -137,6 +140,7 @@ class MainActivity : AppCompatActivity() {
             },
             { error ->
                 Toast.makeText(this, "Failed to create payment intent", Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error: ${error.message}")
             }
         ) {
             override fun getHeaders(): Map<String, String> {
@@ -148,8 +152,7 @@ class MainActivity : AppCompatActivity() {
                     "customer" to customerId,
                     "amount" to mount,
                     "currency" to "usd",
-                    "automatic_payment_methods[enabled]" to "true",
-                    "setup_future_usage" to ""
+                    "automatic_payment_methods[enabled]" to "true"
                 )
             }
         }
@@ -158,9 +161,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun presentPaymentSheet(clientSecret: String) {
-        val configuration = PaymentSheet.Configuration("Your Business Name")
-        paymentSheet.presentWithPaymentIntent(clientSecret, configuration)
+        paymentSheet.presentWithPaymentIntent(
+            clientSecret,
+            PaymentSheet.Configuration("Example Inc.")
+        )
+    }
+
+    private fun enableEdgeToEdge() {
+        window.setDecorFitsSystemWindows(false)
     }
 }
-
-
