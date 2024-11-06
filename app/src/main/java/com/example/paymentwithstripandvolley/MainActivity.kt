@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+
+
         Log.d("MainActivity", mount)
 
         // Initialize Stripe configuration with publishable key
