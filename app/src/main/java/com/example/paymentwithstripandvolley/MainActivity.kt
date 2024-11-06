@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity() {
     private var mount: String = "0"
 
     // #TODO put your public and secret key
-    private val SECRET_KEY = "put you public key"
-    private val PUBLISHABLE_KEY = "put you secert key"
+    private val SECRET_KEY =  "put you secert key"
+    private val PUBLISHABLE_KEY ="put you public key"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
